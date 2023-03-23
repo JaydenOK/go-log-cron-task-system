@@ -3,9 +3,9 @@ module app
 go 1.19
 
 require (
-	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
 	github.com/elastic/go-elasticsearch/v8 v8.6.0
 	github.com/spf13/viper v1.15.0
+	github.com/streadway/amqp v1.0.0
 )
 
 require (

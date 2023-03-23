@@ -1,9 +1,6 @@
 package controllers
 
 import (
-	"app/libs/kafkalib"
-	"app/utils"
-	"fmt"
 	"net/http"
 )
 
@@ -17,14 +14,14 @@ func (kafkaManage *KafkaManage) TopicCreate(w http.ResponseWriter, r *http.Reque
 }
 
 func (kafkaManage *KafkaManage) TopicList(w http.ResponseWriter, r *http.Request) {
-	adminClient := kafkalib.GetClient()
-	metadata, err := adminClient.GetMetadata(nil, true, 100)
-	if err != nil {
-		utils.FailResponse(w, err)
-		return
-	}
-	for key, value := range metadata.Topics {
-		fmt.Println("key:"+key, "value:", value)
-	}
-	utils.SuccessResponse(w, metadata.Topics)
+	//adminClient := kafkalib.GetClient()
+	//metadata, err := adminClient.GetMetadata(nil, true, 100)
+	//if err != nil {
+	//	utils.FailResponse(w, err)
+	//	return
+	//}
+	//for key, value := range metadata.Topics {
+	//	fmt.Println("key:"+key, "value:", value)
+	//}
+	//utils.SuccessResponse(w, metadata.Topics)
 }

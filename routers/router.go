@@ -9,11 +9,10 @@ type Router struct {
 	registerRouter map[string]func(http.ResponseWriter, *http.Request)
 }
 
-var router = &Router{
-	registerRouter: make(map[string]func(w http.ResponseWriter, r *http.Request)),
-}
-
 func New() *Router {
+	var router = &Router{
+		registerRouter: make(map[string]func(w http.ResponseWriter, r *http.Request)),
+	}
 	return router
 }
 
@@ -58,5 +57,5 @@ func (r *Router) GetRegisterRouter() map[string]func(http.ResponseWriter, *http.
 //初始化
 func (r *Router) Init() *Router {
 	r.urlMapping()
-	return router
+	return r
 }
