@@ -14,6 +14,7 @@ func main() {
 	router := routers.New().Init()
 	servers.New(router).Start()
 
+	fmt.Println("server started")
 }
 
 // 加载配置文件信息到viper

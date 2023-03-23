@@ -49,7 +49,7 @@ clickhouse:
   password: ""
 
 kafka:
-  host: "192.168.92.65"
-  port: 9200
+  host: "192.168.31.200"
+  port: 2181
   username: ""
   password: ""

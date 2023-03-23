@@ -26,6 +26,11 @@ func (r *Router) urlMapping() {
 		r.Add("/cmd/status", cmd.Status)
 	}
 	{
+		var es controllers.KafkaManage
+		r.Add("/es/create_topic", es.AddIndex)
+		r.Add("/es/search", es.Search)
+	}
+	{
 		var es controllers.Es
 		r.Add("/es/add_index", es.AddIndex)
 		r.Add("/es/search", es.Search)

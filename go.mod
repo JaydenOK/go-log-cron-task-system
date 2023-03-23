@@ -2,9 +2,14 @@ module app
 
 go 1.19
 
-require github.com/spf13/viper v1.15.0
+require (
+	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
+	github.com/elastic/go-elasticsearch/v8 v8.6.0
+	github.com/spf13/viper v1.15.0
+)
 
 require (
+	github.com/elastic/elastic-transport-go/v8 v8.0.0-20211216131617-bbee439d559c // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
