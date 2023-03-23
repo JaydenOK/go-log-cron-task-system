@@ -1,24 +1,30 @@
 package controllers
 
 import (
-	"app/messages"
+	"app/libs/kafkalib"
 	"app/utils"
 	"fmt"
 	"net/http"
 )
 
+//kafka-sdk文档：https://docs.confluent.io/platform/current/clients/confluent-kafka-go/index.html
+
 type KafkaManage struct {
 }
 
-func (kafkaManage *KafkaManage) Status(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(utils.RequestHeader(r))
-	fmt.Println(utils.ParamsGet(r))
-	fmt.Println(utils.ParamsPost(r))
-	fmt.Println(utils.ParamsJson(r))
-	message := messages.SearchMessage{
-		Id:         "111",
-		Content:    "123ABC呐呐呐",
-		CreateTime: "2023-03-22 18:00:00",
+func (kafkaManage *KafkaManage) TopicCreate(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (kafkaManage *KafkaManage) TopicList(w http.ResponseWriter, r *http.Request) {
+	adminClient := kafkalib.GetClient()
+	metadata, err := adminClient.GetMetadata(nil, true, 100)
+	if err != nil {
+		utils.FailResponse(w, err)
+		return
 	}
-	utils.SuccessResponse(w, message)
+	for key, value := range metadata.Topics {
+		fmt.Println("key:"+key, "value:", value)
+	}
+	utils.SuccessResponse(w, metadata.Topics)
 }
