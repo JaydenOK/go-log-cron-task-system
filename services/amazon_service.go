@@ -2,37 +2,74 @@ package services
 
 import (
 	"app/contexts"
+	"app/libs/mysqllib"
+	"app/models"
 	"app/utils"
-	"encoding/json"
 	"errors"
+	"fmt"
+	"gorm.io/gorm"
 	"net/http"
-	"time"
+	"sync"
 )
 
 type AmazonService struct {
 }
 
+type taskLock struct {
+	mutex sync.Mutex
+}
+
 //定时任务触发，并发刷新亚马逊token
 func (service *AmazonService) RefreshToken(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	utils.ParamsGet(r)
-
-	var users map[string]User
-	users = make(map[string]User) //在使用时没有进行初始化map，导致使用时失败，或者直接声明时，使用
-	userListJson, _ := redisClient.Get(UserListKey).Result()
-	_ = json.Unmarshal([]byte(userListJson), &users)
-	// 获取 map 中某个 key 是否存在的语法。如果 ok 是 true，表示 key 存在，key 对应的值就是 value ，反之表示 key 不存在。
-	_, ok := users[username]
-	if !ok {
-		users[username] = User{
-			Username: username,
-			Password: password,
-		}
-		newUserListJson, _ := json.Marshal(users)
-		redisClient.Set(UserListKey, newUserListJson, 86400*time.Second)
-		return users, nil
-	} else {
-		return nil, errors.New("用户已注册")
+	query := utils.ParamsGet(r)
+	//并发数
+	concurrency := query.Get("concurrency")
+	id := query.Get("id")
+	var concurrencyInt, idInt int
+	var e error
+	concurrencyInt, e = utils.StringToInt(concurrency)
+	if e != nil {
+		return nil, errors.New("参数concurrency错误")
 	}
+	if id != "" {
+		idInt, e = utils.StringToInt(concurrency)
+		if e != nil {
+			return nil, errors.New("参数id错误")
+		}
+	}
+	mysqlDb := mysqllib.GetMysqlDb()
+	var amazonAdsAccountModel models.AmazonAdsAccountModel
+	db := mysqlDb.Table(amazonAdsAccountModel.TableName())
+	if idInt != 0 {
+		db = db.Where("id=?", idInt)
+	}
+	pageSize := 10
+	lists := getAccountList(db, 1, pageSize)
+	fmt.Println(lists)
+	return lists, nil
+
+	taskCh := make(chan int, concurrencyInt)
+	var total int
+	for i, account := range lists {
+		taskCh <- i
+		total++
+		go service.doRefreshToken(taskCh, account)
+	}
+	data := make(map[string]interface{})
+	data["total"] = total
+	return data, nil
+}
+
+//执行任务
+func (service *AmazonService) doRefreshToken(taskCh chan int, model models.AmazonAdsAccountModel) {
+
+	<-taskCh
+}
+
+func getAccountList(db *gorm.DB, page, pageSize int) []models.AmazonAdsAccountModel {
+	var amazonAdsAccountModel []models.AmazonAdsAccountModel //用于查找多个
+	db.Offset((page - 1) * pageSize).Limit(pageSize).Order("id asc").Find(&amazonAdsAccountModel)
+	return amazonAdsAccountModel
 }
 
 func (service *AmazonService) PullOrder(ctx contexts.MyContext) interface{} {

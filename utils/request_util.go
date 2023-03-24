@@ -3,12 +3,13 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 )
 
-//获取参数方式
-//方式一：r.Header["Accept-Encoding"]，得到的是一个字符串切片
-//方式二：r.Header.Get("Accept-Encoding")，得到的是字符串形式的值，多个值使用逗号分隔
-func ParamsGet(r *http.Request) interface{} {
+//获取参数方式，返回字符串切片
+//方式一：query["Accept-Encoding"]，得到的是一个字符串切片
+//方式二：query.Get("Accept-Encoding")，得到的是字符串形式的值(第一个)，多个值使用逗号分隔
+func ParamsGet(r *http.Request) url.Values {
 	query := r.URL.Query()
 	return query
 }

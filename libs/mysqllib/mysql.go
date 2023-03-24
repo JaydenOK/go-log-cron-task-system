@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	mysqlClient *gorm.DB
+	mysqlDb *gorm.DB
 )
 
-func InitMysqlClient() {
+//返回新的连接
+func getDbConnection() *gorm.DB {
 	var dsn string
 	host := viper.GetString("mysql.host")
 	username := viper.GetString("mysql.username")
@@ -33,9 +34,20 @@ func InitMysqlClient() {
 		fmt.Println("mysql连接异常：", err.Error())
 		panic(utils.StringToInterface(err.Error()))
 	}
-	mysqlClient = db
+	return db
 }
 
-func GetMysqlClient() *gorm.DB {
-	return mysqlClient
+//初始化公共连接
+func InitMysqlDb() {
+	mysqlDb = getDbConnection()
+}
+
+//获取公共连接
+func GetMysqlDb() *gorm.DB {
+	return mysqlDb
+}
+
+//获取新的mysql连接
+func GetNewMysqlDb() *gorm.DB {
+	return getDbConnection()
 }

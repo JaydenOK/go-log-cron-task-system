@@ -4,8 +4,11 @@ go 1.19
 
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.6.0
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.15.0
 	github.com/streadway/amqp v1.0.0
+	gorm.io/driver/mysql v1.4.7
+	gorm.io/gorm v1.23.8
 )
 
 require (
@@ -27,6 +30,4 @@ require (
 	golang.org/x/text v0.5.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/mysql v1.4.7 // indirect
-	gorm.io/gorm v1.23.8 // indirect
 )

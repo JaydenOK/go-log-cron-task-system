@@ -9,11 +9,11 @@ app:
   webSocketUrl:  127.0.0.1:8089
 
 mysql:
-  host: "192.168.71.175"
+  host: "192.168.92.209"
   port: 3306
-  username: "lizuobing"
-  password: "lizuobing#Hsd1h"
-  database: "yb_new_hwc"
+  username: "hujuncai"
+  password: "yibai#2022"
+  database: "yibai_account_manage"
 
 redis:
   host: "192.168.71.238"

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"app/libs/loglib"
+	"app/libs/mysqllib"
 	"app/routers"
 	"app/servers"
 	"app/utils"
@@ -10,13 +12,19 @@ import (
 )
 
 func main() {
+	//初始化日志组件
+	loglib.Init()
+	//初始化配置
 	loadConfig()
+	//初始化路由
 	router := routers.New().Init()
+	mysqllib.InitMysqlDb()
+	//启动server
+	loglib.Info("server started!")
 	servers.New(router).Start()
 
 	//tasks.Manager.New().Init()
 
-	fmt.Println("server started")
 }
 
 // 加载配置文件信息到viper
