@@ -2,14 +2,15 @@ package services
 
 import (
 	"app/contexts"
+	"app/libs/loglib"
 	"app/libs/mysqllib"
 	"app/models"
 	"app/utils"
 	"errors"
-	"fmt"
 	"gorm.io/gorm"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type AmazonService struct {
@@ -45,25 +46,36 @@ func (service *AmazonService) RefreshToken(w http.ResponseWriter, r *http.Reques
 	}
 	pageSize := 10
 	lists := getAccountList(db, 1, pageSize)
-	fmt.Println(lists)
-	return lists, nil
-
-	taskCh := make(chan int, concurrencyInt)
+	//@todo 使用chan有限通道，阻塞投递，达到限制并发目的，控制任务并发数
+	loglib.Info("concurrency:" + utils.IntToString(concurrencyInt))
+	//@todo 主协程阻塞
+	var wg sync.WaitGroup
+	//@todo 任务并发阻塞（匿名空struct）
+	var taskCh chan struct{}
+	taskCh = make(chan struct{}, concurrencyInt)
+	defer close(taskCh)
 	var total int
-	for i, account := range lists {
-		taskCh <- i
+	for _, account := range lists {
+		wg.Add(1)
+		//阻塞投递
+		taskCh <- struct{}{}
 		total++
-		go service.doRefreshToken(taskCh, account)
+		go service.doRefreshToken(&wg, taskCh, account)
 	}
+	wg.Wait()
 	data := make(map[string]interface{})
 	data["total"] = total
 	return data, nil
 }
 
 //执行任务
-func (service *AmazonService) doRefreshToken(taskCh chan int, model models.AmazonAdsAccountModel) {
-
-	<-taskCh
+func (service *AmazonService) doRefreshToken(wg *sync.WaitGroup, taskCh chan struct{}, account models.AmazonAdsAccountModel) {
+	defer func() {
+		<-taskCh
+	}()
+	defer wg.Done()
+	time.Sleep(5 * time.Second)
+	loglib.Info("task done:" + utils.Int32ToString(account.Id) + ", account_name:" + account.AccountName)
 }
 
 func getAccountList(db *gorm.DB, page, pageSize int) []models.AmazonAdsAccountModel {

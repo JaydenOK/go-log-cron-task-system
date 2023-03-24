@@ -3,8 +3,9 @@ package models
 import "app/utils"
 
 type AmazonAdsAccountModel struct {
-	Id                  uint32          `json:"id"`
-	AccountId           uint32          `json:"account_id"`
+	Id                  int32           `json:"id"`
+	AccountId           int32           `json:"account_id"`
+	AccountName         string           `json:"account_name"`
 	OrderId             string          `json:"order_id"`
 	SellingPartnerId    string          `json:"selling_partner_id"`
 	ProfileId           string          `json:"profile_id"`

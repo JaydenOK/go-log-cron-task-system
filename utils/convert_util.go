@@ -5,6 +5,30 @@ import (
 	"strconv"
 )
 
+// 字符串string转整型
+func StringToInt(str string) (int, error) {
+	return strconv.Atoi(str)
+}
+
+// 整型int转字符串
+func IntToString(i int) string {
+	return strconv.Itoa(i)
+}
+
+func Int32ToString(i int32) string {
+	return strconv.Itoa(int(i))
+}
+
+// 字符串转Byte切片
+func StringToByte(str string) []byte {
+	return []byte(str)
+}
+
+// Byte转字符串
+func ByteToString(b []byte) string {
+	return string(b)
+}
+
 // interface转string
 func InterfaceToString(value interface{}) string {
 	// interface 转 string
