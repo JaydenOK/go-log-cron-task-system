@@ -39,7 +39,7 @@ func (r *Router) urlMapping() {
 		//定时任务
 		var amazon cron.Amazon
 		r.Add("/cron/amazon/refresh_token", amazon.RefreshToken)
-		r.Add("/es/amazon/pullOrder", amazon.PullOrder)
+		r.Add("/cron/amazon/pullOrder", amazon.PullOrder)
 	}
 }
 
