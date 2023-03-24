@@ -14,6 +14,8 @@ func main() {
 	router := routers.New().Init()
 	servers.New(router).Start()
 
+	//tasks.Manager.New().Init()
+
 	fmt.Println("server started")
 }
 

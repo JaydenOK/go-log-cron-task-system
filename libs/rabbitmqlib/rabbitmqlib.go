@@ -333,7 +333,7 @@ func (rabbitMQ *RabbitMQ) ConsumeStart() error {
 		rabbitMQ.taskNum = 1
 	}
 	for index := 0; index < rabbitMQ.taskNum; index++ {
-		//多个消费者，相同Channel连接，不同ConsumerTag
+		//多个消费者，相同Channel连接，不同 ConsumerTag
 		if err := rabbitMQ.ConsumeInit(
 			rabbitMQ.exchangeName,
 			rabbitMQ.queueName,

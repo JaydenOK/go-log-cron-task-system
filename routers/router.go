@@ -1,7 +1,8 @@
 package routers
 
 import (
-	"app/controllers"
+	"app/controllers/api"
+	"app/controllers/cron"
 	"net/http"
 )
 
@@ -19,20 +20,26 @@ func New() *Router {
 //路由配置
 func (r *Router) urlMapping() {
 	{
-		var cmd controllers.Cmd
-		r.Add("/cmd/start", cmd.Start)
-		r.Add("/cmd/stop", cmd.Stop)
-		r.Add("/cmd/status", cmd.Status)
+		var cmd api.Cmd
+		r.Add("/api/cmd/start", cmd.Start)
+		r.Add("/api/cmd/stop", cmd.Stop)
+		r.Add("/api/cmd/status", cmd.Status)
 	}
 	{
-		var kafkaManage controllers.KafkaManage
-		r.Add("/es/topic_create", kafkaManage.TopicCreate)
-		r.Add("/es/topic_list", kafkaManage.TopicList)
+		var kafkaManage api.KafkaManage
+		r.Add("/api/es/topic_create", kafkaManage.TopicCreate)
+		r.Add("/api/es/topic_list", kafkaManage.TopicList)
 	}
 	{
-		var es controllers.Es
-		r.Add("/es/add_index", es.AddIndex)
-		r.Add("/es/search", es.Search)
+		var es api.Es
+		r.Add("/api/es/add_index", es.AddIndex)
+		r.Add("/api/es/search", es.Search)
+	}
+	{
+		//定时任务
+		var amazon cron.Amazon
+		r.Add("/cron/amazon/refresh_token", amazon.RefreshToken)
+		r.Add("/es/amazon/pullOrder", amazon.PullOrder)
 	}
 }
 
