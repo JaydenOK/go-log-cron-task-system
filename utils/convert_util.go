@@ -91,3 +91,16 @@ func StringToInterface(s string) interface{} {
 	var x interface{} = s
 	return x
 }
+
+//map集合转字节
+func MapToByte(m map[string]interface{}) ([]byte, error) {
+	bytes, err := json.Marshal(m)
+	return bytes, err
+}
+
+//字节转map集合
+func ByteToMap(b []byte) (map[string]interface{}, error) {
+	m := make(map[string]interface{})
+	err := json.Unmarshal(b, &m)
+	return m, err
+}
