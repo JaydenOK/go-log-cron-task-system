@@ -15,7 +15,7 @@ var (
 )
 
 //返回新的连接
-func getDbConnection(dbName string) *gorm.DB {
+func createDbConnection(dbName string) *gorm.DB {
 	var dsn string
 	host := viper.GetString("mysql.host")
 	username := viper.GetString("mysql.username")
@@ -38,6 +38,10 @@ func getDbConnection(dbName string) *gorm.DB {
 	}
 	// 获取通用数据库对象sql.DB以使用其函数
 	sqlDB, err := newDb.DB()
+	if err != nil {
+		fmt.Println("mysql db获取异常：", err.Error())
+		panic(utils.StringToInterface(err.Error()))
+	}
 	//SetMaxIdleConns设置空闲连接池的最大连接数。
 	sqlDB.SetMaxIdleConns(10)
 	// SetMaxOpenConns设置数据库打开的最大连接数。
@@ -49,8 +53,8 @@ func getDbConnection(dbName string) *gorm.DB {
 
 //初始化各个数据库的连接
 func InitMysqlDb() {
-	db = getDbConnection("yibai_account_manage")
-	dbSystem = getDbConnection("yibai_account_system")
+	db = createDbConnection("yibai_account_manage")
+	dbSystem = createDbConnection("yibai_account_system")
 }
 
 //获取公共连接
@@ -65,5 +69,5 @@ func GetMysqlDbSystem() *gorm.DB {
 
 //获取新的mysql连接（?）
 //func GetNewMysqlDb() *gorm.DB {
-//	return getDbConnection()
+//	return createDbConnection()
 //}

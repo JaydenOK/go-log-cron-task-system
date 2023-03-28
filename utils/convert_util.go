@@ -30,59 +30,116 @@ func ByteToString(b []byte) string {
 }
 
 // interface转string
-func InterfaceToString(value interface{}) string {
+func InterfaceToString(f interface{}) string {
 	// interface 转 string
-	var key string
-	if value == nil {
-		return key
+	var s string
+	if f == nil {
+		return s
 	}
-	switch value.(type) {
+	switch f.(type) {
 	case float64:
-		ft := value.(float64)
-		key = strconv.FormatFloat(ft, 'f', -1, 64)
+		ft := f.(float64)
+		s = strconv.FormatFloat(ft, 'f', -1, 64)
 	case float32:
-		ft := value.(float32)
-		key = strconv.FormatFloat(float64(ft), 'f', -1, 64)
+		ft := f.(float32)
+		s = strconv.FormatFloat(float64(ft), 'f', -1, 64)
 	case int:
-		it := value.(int)
-		key = strconv.Itoa(it)
+		it := f.(int)
+		s = strconv.Itoa(it)
 	case uint:
-		it := value.(uint)
-		key = strconv.Itoa(int(it))
+		it := f.(uint)
+		s = strconv.Itoa(int(it))
 	case int8:
-		it := value.(int8)
-		key = strconv.Itoa(int(it))
+		it := f.(int8)
+		s = strconv.Itoa(int(it))
 	case uint8:
-		it := value.(uint8)
-		key = strconv.Itoa(int(it))
+		it := f.(uint8)
+		s = strconv.Itoa(int(it))
 	case int16:
-		it := value.(int16)
-		key = strconv.Itoa(int(it))
+		it := f.(int16)
+		s = strconv.Itoa(int(it))
 	case uint16:
-		it := value.(uint16)
-		key = strconv.Itoa(int(it))
+		it := f.(uint16)
+		s = strconv.Itoa(int(it))
 	case int32:
-		it := value.(int32)
-		key = strconv.Itoa(int(it))
+		it := f.(int32)
+		s = strconv.Itoa(int(it))
 	case uint32:
-		it := value.(uint32)
-		key = strconv.Itoa(int(it))
+		it := f.(uint32)
+		s = strconv.Itoa(int(it))
 	case int64:
-		it := value.(int64)
-		key = strconv.FormatInt(it, 10)
+		it := f.(int64)
+		s = strconv.FormatInt(it, 10)
 	case uint64:
-		it := value.(uint64)
-		key = strconv.FormatUint(it, 10)
+		it := f.(uint64)
+		s = strconv.FormatUint(it, 10)
 	case string:
-		key = value.(string)
+		s = f.(string)
 	case []byte:
-		key = string(value.([]byte))
+		s = string(f.([]byte))
 	default:
-		newValue, _ := json.Marshal(value)
-		key = string(newValue)
+		newValue, _ := json.Marshal(f)
+		s = string(newValue)
 	}
+	return s
+}
 
-	return key
+//interface转Int
+func InterfaceToInt(f interface{}) int {
+	var i int
+	switch f.(type) {
+	case uint:
+		i = int(f.(uint))
+		break
+	case int8:
+		i = int(f.(int8))
+		break
+	case uint8:
+		i = int(f.(uint8))
+		break
+	case int16:
+		i = int(f.(int16))
+		break
+	case uint16:
+		i = int(f.(uint16))
+		break
+	case int32:
+		i = int(f.(int32))
+		break
+	case uint32:
+		i = int(f.(uint32))
+		break
+	case int64:
+		i = int(f.(int64))
+		break
+	case uint64:
+		i = int(f.(uint64))
+		break
+	case float32:
+		i = int(f.(float32))
+		break
+	case float64:
+		i = int(f.(float64))
+		break
+	case string:
+		i, _ = strconv.Atoi(f.(string))
+		if i == 0 && len(f.(string)) > 0 {
+			f, _ := strconv.ParseFloat(f.(string), 64)
+			i = int(f)
+		}
+		break
+	case nil:
+		i = 0
+		break
+	case json.Number:
+		t3, _ := f.(json.Number).Int64()
+		i = int(t3)
+		break
+	default:
+		i = f.(int)
+		break
+	}
+	return i
 }
 
 // 字符串转interface

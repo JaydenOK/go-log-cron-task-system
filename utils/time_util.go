@@ -1,11 +1,13 @@
 package utils
 
 import (
-	"app/constants"
 	"database/sql/driver"
 	"fmt"
 	"time"
 )
+
+const TimeFormat = "2006-01-02 15:04:05"
+const DateFormat = "2006-01-02"
 
 type LocalTime time.Time
 
@@ -14,7 +16,7 @@ func (t LocalTime) MarshalJSON() ([]byte, error) {
 	if &t == nil {
 		return []byte("null"), nil
 	}
-	stamp := fmt.Sprintf("\"%s\"", time.Time(t).Format(constants.TimeFormat))
+	stamp := fmt.Sprintf("\"%s\"", time.Time(t).Format(TimeFormat))
 	return []byte(stamp), nil
 }
 
@@ -26,7 +28,7 @@ func (t *LocalTime) UnmarshalJSON(data []byte) (err error) {
 		return
 	}
 	// 指定解析的格式
-	now, err := time.Parse(`"`+constants.TimeFormat+`"`, string(data))
+	now, err := time.Parse(`"`+TimeFormat+`"`, string(data))
 	*t = LocalTime(now)
 	return
 }
@@ -37,7 +39,7 @@ func (t LocalTime) Value() (driver.Value, error) {
 	if t.String() == "0001-01-01 00:00:00" {
 		return nil, nil
 	}
-	return []byte(time.Time(t).Format(constants.TimeFormat)), nil
+	return []byte(time.Time(t).Format(TimeFormat)), nil
 }
 
 // 检出 mysql 时调用
@@ -50,7 +52,7 @@ func (t *LocalTime) Scan(v interface{}) error {
 
 // 用于 fmt.Println 和后续验证场景
 func (t LocalTime) String() string {
-	return time.Time(t).Format(constants.TimeFormat)
+	return time.Time(t).Format(TimeFormat)
 }
 
 // 获取当前时间戳 1664531446
@@ -70,10 +72,24 @@ func GetCurrentMicroTimestamp() int64 {
 
 // 获取当前日期时间 2022-09-30 17:50:46
 func GetCurrentDateTime() string {
-	return time.Now().Format(constants.TimeFormat)
+	return time.Now().Format(TimeFormat)
 }
 
 // 获取当前日期 2022-09-30
 func GetCurrentDate() string {
-	return time.Now().Format(constants.DateFormat)
+	return time.Now().Format(DateFormat)
+}
+
+//时间戳转日期(11位)
+func FormatTimeToDate(t int64) string {
+	return time.Unix(t, 0).Format(TimeFormat)
+}
+
+//日期字符串转时间戳
+func ParseDateToTime(s string) int64 {
+	if t, e := time.Parse(TimeFormat, s); e != nil {
+		return 0
+	} else {
+		return t.Unix()
+	}
 }

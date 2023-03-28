@@ -10,9 +10,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync"
 )
 
@@ -41,21 +41,14 @@ func (service *AmazonService) RefreshToken(w http.ResponseWriter, r *http.Reques
 			return nil, errors.New("参数id错误")
 		}
 	}
-	mysqlDb := mysqllib.GetMysqlDb()
-	var amazonAdsAccountModel models.AmazonAdsAccountModel
-	db := mysqlDb.Table(amazonAdsAccountModel.TableName())
-	if idInt != 0 {
-		db = db.Where("id=?", idInt)
-	}
 	pageSize := 10
-	lists := getAccountList(db, 1, pageSize)
+	lists := getAccountList(1, pageSize, idInt)
 	if lists == nil {
 		return map[string]string{"message": "nodata"}, nil
 	}
 	//获取开发者信息
-	dbSystem := mysqllib.GetMysqlDbSystem()
-	developerList := getDeveloperList(dbSystem)
-	fmt.Println(developerList)
+	developerList := getDeveloperList()
+	fmt.Println("developerList", developerList)
 	//@todo 使用chan有限通道，阻塞投递，达到限制并发目的，控制任务并发数
 	loglib.Info("concurrency:" + utils.IntToString(concurrencyInt))
 	//@todo 主协程阻塞
@@ -76,7 +69,7 @@ func (service *AmazonService) RefreshToken(w http.ResponseWriter, r *http.Reques
 			}
 		}
 		total++
-		go service.doRefreshToken(db, &wg, taskCh, account, developer)
+		go service.doRefreshToken(&wg, taskCh, account, developer)
 	}
 	wg.Wait()
 	data := make(map[string]interface{})
@@ -85,13 +78,13 @@ func (service *AmazonService) RefreshToken(w http.ResponseWriter, r *http.Reques
 }
 
 //执行任务：
-func (service *AmazonService) doRefreshToken(db *gorm.DB, wg *sync.WaitGroup, taskCh chan struct{},
-	account models.AmazonAdsAccountModel, developer models.AmazonDeveloperModel) string {
+func (service *AmazonService) doRefreshToken(wg *sync.WaitGroup, taskCh chan struct{},
+	account models.AmazonAdsAccountModel, developer models.AmazonDeveloperModel) {
 	defer func() {
 		<-taskCh
 	}()
 	defer wg.Done()
-	//requestUrl := "http://192.168.92.208/shop/Auth/code"
+	db := mysqllib.GetMysqlDb()
 	requestUrl := "https://api.amazon.com/auth/o2/token"
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
@@ -99,37 +92,60 @@ func (service *AmazonService) doRefreshToken(db *gorm.DB, wg *sync.WaitGroup, ta
 	data.Set("client_id", developer.ClientId)
 	data.Set("client_secret", developer.ClientSecret)
 	resp := httplib.PostForm(requestUrl, data)
-	//{"access_token":"Atza|IwEBIBRHABUnTDIu03Kqdrpp9J3XCwFeNqMTSSdCEsEN10ZMYlyoZT3xzPnJ1pud6eQtppsFrK-GknMZt0PL3BS7ikdSQwcoLCc8TfWXQo_UWfmXevkwer7GJhIjkBMOuWnq8WJ5B-cvU0Tc0u_8bfDd05ny6rKRfryJAbuxVYF5Te_3kXNqjwLopK_igZNy59EJMOTjG22kl01OoY_jWp92xGbjjvCsY7-DvWRJh_tnuLLFHFERET0tIBapiPamALx4s4VKqUHrYtfH8ixuqPRXFPqLZtqvV2wjQJ2BKtTuy5Ssy6He5mKomeVS8ktQa9n6BjPaDaU2XyS55NUkRp5WzVmuJeArGrKuWK7yW-u1jarqzM1Z6xkdlkyFJM9l8zWcnYNHleX1IcgenRqqAyLt4yzNnGAySR9KThu0hWODKn524Vuo3V6OEvJWxPNt_d2jBe_AcH0L1rCTDhJxue7Xddd7HPVkMOJME7QdULIlkvhluw","refresh_token":"Atzr|IwEBIEvJPwllpNsOq60juN5SQl6zpi7PjZ8WtANR-LekhiuCDlVLj-MI-DrszKxr5xGsrmkwp2PIhoA0wWLG-eQVkXKbmRu-WkECRqIH4f2m0Ve8p3zmx9AZoid01V69NCBxVJA9CxbB-l0uQh2m4SJ3s7f4cKX2tk-pIFN2X2B4b5ZWna5MMt3RNsmMiEko7XZITftAXh0R9rBdbocVcZb_pvXxHvORYXpkiFLKsxcew8BIBCglU1BiGTV-7UdAfD1NOpNv4FSZNOLdaLNAnLwQuc4OuBJTtyAtfcus8GQ0imxQdo6UzcRo9D3TOoxsmjRc0rIfa31x83buaOmZpqvLgwpqkwQ1MMyA1dXOhC7A0lRyMZ2A1Hpki5xVqT9uUR72K2T7WbLehskYfGWGRocML0UDs1l5Mp-PeNU6lcHe_Ok4kkSz0trqEsXJ2KBu5ZnrhLuv2c3a6ERNsAQBltJQnJPpLIMHM02pnjNrF7VKcn--LQ","token_type":"bearer","expires_in":3600}
 	var tokenData map[string]interface{}
 	err := json.Unmarshal([]byte(resp), &tokenData)
 	if err != nil {
-		db.Model(models.AmazonAdsAccountModel{}).Where("id=?", account.Id).Update("ads_refresh_msg", resp)
-		return "fail:" + resp
+		// 根据条件更新
+		db.Model(&models.AmazonAdsAccountModel{}).Where("id=?", account.Id).Update("ads_refresh_msg", resp)
+		//db.Model(&amazonAdsAccountModel).Where("id=?", account.Id).Update("ads_refresh_msg", resp)  //&struct取实例化后，使用实例化的主键作为条件更新
+		loglib.Info("fail:" + resp)
+		return
 	}
-	accessToken := tokenData["access_token"]
-	refreshToken := tokenData["refresh_token"]
-	//tokenType := tokenData["token_type"]
+	_, ok := tokenData["access_token"]
+	if !ok {
+		value, ok2 := tokenData["error_description"]
+		if ok2 {
+			db.Model(&models.AmazonAdsAccountModel{}).Where("id=?", account.Id).Update("ads_refresh_msg", value)
+		} else {
+			db.Model(&models.AmazonAdsAccountModel{}).Where("id=?", account.Id).Update("ads_refresh_msg", resp)
+		}
+		return
+	}
 	expiresIn := tokenData["expires_in"]
-	fmt.Println()
-	//authorizeEndTime := utils.GetCurrentTimestamp() + expiresIn.(int64)
+	authorizeEndTime := utils.GetCurrentTimestamp() + int64(utils.InterfaceToInt(expiresIn))
 	//Updates更新多列
-	//set := map[string]interface{}{"ads_access_token": accessToken, "ads_authorize_end_time": authorizeEndTime, "ads_refresh_token": refreshToken, "ads_expires_in": expiresIn,}
-	set := map[string]interface{}{"ads_access_token": accessToken, "ads_refresh_token": refreshToken, "ads_expires_in": expiresIn,}
-	db.Model(models.AmazonAdsAccountModel{}).Where("id=?", account.Id).Updates(set)
-	//db.Model(models.AmazonAdsAccountModel{}).Where("id=?", account.Id).Updates(models.AmazonAdsAccountModel{AdsRefreshMsg:resp, AdsAccessToken: ""})
+	set := map[string]interface{}{
+		"ads_access_token":       tokenData["access_token"],
+		"ads_authorize_end_time": utils.FormatTimeToDate(authorizeEndTime),
+		"ads_refresh_token":      tokenData["refresh_token"],
+		"ads_expires_in":         tokenData["expires_in"],
+		"ads_refresh_time":       utils.GetCurrentDateTime(),
+		"ads_refresh_msg":        "",
+	}
+	result := db.Model(&models.AmazonAdsAccountModel{}).Where("id=?", account.Id).Updates(set)
+	if result.RowsAffected <= 0 {
+		loglib.Info("update fail:" + strconv.Itoa(int(result.RowsAffected)))
+		return
+	}
 	loglib.Info("Done| id:" + utils.Int32ToString(account.Id) + ", account_name:" + account.AccountName + ", resp:" + resp)
-	return resp
+	return
 }
 
-func getAccountList(db *gorm.DB, page, pageSize int) []models.AmazonAdsAccountModel {
-	var amazonAdsAccountModel []models.AmazonAdsAccountModel //多个切片
-	db.Offset((page - 1) * pageSize).Limit(pageSize).Order("id asc").Find(&amazonAdsAccountModel)
-	return amazonAdsAccountModel
+func getAccountList(page, pageSize, idInt int) []models.AmazonAdsAccountModel {
+	mysqlDb := mysqllib.GetMysqlDb()
+	db := mysqlDb.Table((&models.AmazonAdsAccountModel{}).TableName())
+	if idInt != 0 {
+		db.Where("id=?", idInt)
+	}
+	var amazonAdsAccountModels []models.AmazonAdsAccountModel //多个切片
+	db.Offset((page - 1) * pageSize).Limit(pageSize).Order("id asc").Find(&amazonAdsAccountModels)
+	return amazonAdsAccountModels
 }
 
-func getDeveloperList(db *gorm.DB) []models.AmazonDeveloperModel {
+func getDeveloperList() []models.AmazonDeveloperModel {
+	dbSystem := mysqllib.GetMysqlDbSystem()
 	var amazonDeveloperModel []models.AmazonDeveloperModel //多个切片
-	db.Find(&amazonDeveloperModel)
+	dbSystem.Find(&amazonDeveloperModel)
 	return amazonDeveloperModel
 }
 

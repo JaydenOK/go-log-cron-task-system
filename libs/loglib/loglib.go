@@ -1,7 +1,7 @@
 package loglib
 
 import (
-	"app/constants"
+	"app/utils"
 	log "github.com/sirupsen/logrus"
 	"os"
 )
@@ -17,7 +17,7 @@ func Init() *log.Logger {
 		ForceColors:     true,
 		DisableColors:   false,
 		FullTimestamp:   true,
-		TimestampFormat: constants.TimeFormat,
+		TimestampFormat: utils.TimeFormat,
 	})
 	logger.SetOutput(os.Stdout)
 	return logger
