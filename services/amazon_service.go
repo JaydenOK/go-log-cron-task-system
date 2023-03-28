@@ -78,8 +78,7 @@ func (service *AmazonService) RefreshToken(w http.ResponseWriter, r *http.Reques
 }
 
 //执行任务：
-func (service *AmazonService) doRefreshToken(wg *sync.WaitGroup, taskCh chan struct{},
-	account models.AmazonAdsAccountModel, developer models.AmazonDeveloperModel) {
+func (service *AmazonService) doRefreshToken(wg *sync.WaitGroup, taskCh chan struct{}, account models.AmazonAdsAccountModel, developer models.AmazonDeveloperModel) {
 	defer func() {
 		<-taskCh
 	}()
